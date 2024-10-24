@@ -6,8 +6,8 @@ local player = Players.LocalPlayer
 -- Variáveis
 local autoGrabEnabled = false
 local itemName = "GunDrop"
-local checkInterval = 0.1 -- Tempo de espera entre verificações
-local tweenSpeed = 0.25 -- Velocidade do Tween
+local checkInterval = 1 -- Detecta a cada 1 segundo
+local tweenSpeed = 0.1 -- Velocidade rápida do Tween
 
 -- Função para criar a interface gráfica
 local function createGUI()
@@ -46,7 +46,7 @@ local function moveToItem(item)
         -- Armazena a posição original do jogador
         local originalPosition = character.HumanoidRootPart.CFrame
         
-        -- Define o alvo do Tween (item encontrado)
+        -- Define o alvo do Tween (posição do item)
         local tweenInfo = TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear)
         local goal = {CFrame = item.CFrame}
 
@@ -57,9 +57,13 @@ local function moveToItem(item)
         -- Espera o Tween terminar
         tween.Completed:Wait()
 
-        -- Aguarda 1 segundo antes de voltar para a posição original
+        -- Espera 1 segundo antes de voltar para a posição original
         wait(1)
-        character.HumanoidRootPart.CFrame = originalPosition
+        
+        -- Cria um Tween para voltar à posição original
+        local backTween = TweenService:Create(character.HumanoidRootPart, tweenInfo, {CFrame = originalPosition})
+        backTween:Play()
+        backTween.Completed:Wait()
     end
 end
 
@@ -70,10 +74,10 @@ local function detectItem()
             local item = game.Workspace:FindFirstChild(itemName)
             if item then
                 print("Item detectado: " .. itemName)
-                moveToItem(item)
+                moveToItem(item) -- Move para o item detectado
             end
         end
-        wait(checkInterval)
+        wait(checkInterval) -- Espera 1 segundo antes de verificar novamente
     end
 end
 
