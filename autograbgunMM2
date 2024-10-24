@@ -1,18 +1,28 @@
+-- Serviços necessários
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Variáveis
+local autoGrabEnabled = false
+local itemName = "GunDrop"
+local checkInterval = 0.1 -- Tempo de espera entre verificações
+local tweenSpeed = 0.25 -- Velocidade do Tween
+
 -- Função para criar a interface gráfica
 local function createGUI()
-    -- Cria a ScreenGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "GunDropGUI"
     screenGui.ResetOnSpawn = false -- Não desaparece quando o jogador morre
-    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    screenGui.Parent = player:WaitForChild("PlayerGui")
 
     -- Cria um Frame para a GUI
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 200, 0, 100)
     frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-    frame.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Cor de fundo do frame
+    frame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     frame.BorderSizePixel = 0
-    frame.Draggable = true -- Permite arrastar a GUI
+    frame.Draggable = true -- Arrastável
     frame.Active = true
     frame.Parent = screenGui
 
@@ -23,54 +33,57 @@ local function createGUI()
     button.Text = "Grab GunDrop: OFF"
     button.TextScaled = true
     button.BackgroundColor3 = Color3.fromRGB(100, 149, 237) -- Azul claro
-    button.TextColor3 = Color3.fromRGB(255, 255, 255) -- Cor do texto
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.Parent = frame
 
     return button
 end
 
--- Variável para controlar o estado do grab automático
-local autoGrabEnabled = false
-local button = createGUI() -- Chama a função para criar a GUI
+-- Função para mover o jogador até o item usando Tween
+local function moveToItem(item)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        -- Armazena a posição original do jogador
+        local originalPosition = character.HumanoidRootPart.CFrame
+        
+        -- Define o alvo do Tween (item encontrado)
+        local tweenInfo = TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear)
+        local goal = {CFrame = item.CFrame}
 
--- Função para pegar o item "GunDrop" automaticamente
-local function teleportToItem(item)
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    
-    -- Armazena a posição atual do jogador
-    local originalPosition = character.HumanoidRootPart.CFrame
+        -- Cria e executa o Tween
+        local tween = TweenService:Create(character.HumanoidRootPart, tweenInfo, goal)
+        tween:Play()
 
-    -- Teleporta o jogador para o item
-    character.HumanoidRootPart.CFrame = item.CFrame
+        -- Espera o Tween terminar
+        tween.Completed:Wait()
 
-    -- Espera 1 segundo
-    wait(1)
-
-    -- Volta para a posição original
-    character.HumanoidRootPart.CFrame = originalPosition
-end
-
--- Função para detectar o item e teleportar automaticamente se habilitado
-local function detectItem()
-    while true do
-        if autoGrabEnabled then
-            local item = game.Workspace:FindFirstChild("GunDrop")
-            if item then
-                print("Item detectado: GunDrop")
-                teleportToItem(item)
-            end
-        end
-        wait(0.1)
+        -- Aguarda 1 segundo antes de voltar para a posição original
+        wait(1)
+        character.HumanoidRootPart.CFrame = originalPosition
     end
 end
 
--- Função para alternar o estado do grab automático
+-- Função para detectar o item e mover automaticamente
+local function detectItem()
+    while true do
+        if autoGrabEnabled then
+            local item = game.Workspace:FindFirstChild(itemName)
+            if item then
+                print("Item detectado: " .. itemName)
+                moveToItem(item)
+            end
+        end
+        wait(checkInterval)
+    end
+end
+
+-- GUI para alternar o estado do grab automático
+local button = createGUI()
 button.MouseButton1Click:Connect(function()
     autoGrabEnabled = not autoGrabEnabled
     if autoGrabEnabled then
         button.Text = "Grab GunDrop: ON"
-        button.BackgroundColor3 = Color3.fromRGB(65, 105, 225) -- Azul um pouco mais escuro
+        button.BackgroundColor3 = Color3.fromRGB(65, 105, 225) -- Azul mais escuro
     else
         button.Text = "Grab GunDrop: OFF"
         button.BackgroundColor3 = Color3.fromRGB(100, 149, 237) -- Azul claro original
