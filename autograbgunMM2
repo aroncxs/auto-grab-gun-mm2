@@ -1,10 +1,39 @@
--- Tempo de espera antes de checar novamente
-local checkInterval = 0.1
+-- Função para criar a interface gráfica
+local function createGUI()
+    -- Cria a ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "GunDropGUI"
+    screenGui.ResetOnSpawn = false -- Não desaparece quando o jogador morre
+    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Nome do item a ser detectado
-local itemName = "GunDrop"
+    -- Cria um Frame para a GUI
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 200, 0, 100)
+    frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+    frame.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Cor de fundo do frame
+    frame.BorderSizePixel = 0
+    frame.Draggable = true -- Permite arrastar a GUI
+    frame.Active = true
+    frame.Parent = screenGui
 
--- Função para teleportar o jogador para a posição do item
+    -- Cria um botão
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 180, 0, 50)
+    button.Position = UDim2.new(0.5, -90, 0.5, -25)
+    button.Text = "Grab GunDrop: OFF"
+    button.TextScaled = true
+    button.BackgroundColor3 = Color3.fromRGB(100, 149, 237) -- Azul claro
+    button.TextColor3 = Color3.fromRGB(255, 255, 255) -- Cor do texto
+    button.Parent = frame
+
+    return button
+end
+
+-- Variável para controlar o estado do grab automático
+local autoGrabEnabled = false
+local button = createGUI() -- Chama a função para criar a GUI
+
+-- Função para pegar o item "GunDrop" automaticamente
 local function teleportToItem(item)
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
@@ -22,21 +51,31 @@ local function teleportToItem(item)
     character.HumanoidRootPart.CFrame = originalPosition
 end
 
--- Função para detectar o item
+-- Função para detectar o item e teleportar automaticamente se habilitado
 local function detectItem()
     while true do
-        -- Procura o item no mapa
-        local item = game.Workspace:FindFirstChild(itemName)
-        
-        if item then
-            print("Item detectado: " .. itemName)
-            teleportToItem(item)
+        if autoGrabEnabled then
+            local item = game.Workspace:FindFirstChild("GunDrop")
+            if item then
+                print("Item detectado: GunDrop")
+                teleportToItem(item)
+            end
         end
-
-        -- Espera um tempo antes de checar novamente
-        wait(checkInterval)
+        wait(0.1)
     end
 end
 
--- Executa a detecção do item em paralelo
+-- Função para alternar o estado do grab automático
+button.MouseButton1Click:Connect(function()
+    autoGrabEnabled = not autoGrabEnabled
+    if autoGrabEnabled then
+        button.Text = "Grab GunDrop: ON"
+        button.BackgroundColor3 = Color3.fromRGB(65, 105, 225) -- Azul um pouco mais escuro
+    else
+        button.Text = "Grab GunDrop: OFF"
+        button.BackgroundColor3 = Color3.fromRGB(100, 149, 237) -- Azul claro original
+    end
+end)
+
+-- Inicia a detecção do item
 spawn(detectItem)
