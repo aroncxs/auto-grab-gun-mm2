@@ -1,84 +1,34 @@
--- Serviços necessários
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
--- Variáveis
-local autoGrabEnabled = false
-local itemName = "GunDrop"
-local checkInterval = 1 -- Detecta a cada 1 segundo
-
--- Função para criar a interface gráfica
-local function createGUI()
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "GunDropGUI"
-    screenGui.ResetOnSpawn = false -- Não desaparece quando o jogador morre
-    screenGui.Parent = player:WaitForChild("PlayerGui")
-
-    -- Cria um Frame para a GUI
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 200, 0, 100)
-    frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-    frame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    frame.BorderSizePixel = 0
-    frame.Draggable = true -- Arrastável
-    frame.Active = true
-    frame.Parent = screenGui
-
-    -- Cria um botão
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 180, 0, 50)
-    button.Position = UDim2.new(0.5, -90, 0.5, -25)
-    button.Text = "Grab GunDrop: OFF"
-    button.TextScaled = true
-    button.BackgroundColor3 = Color3.fromRGB(100, 149, 237) -- Azul claro
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Parent = frame
-
-    return button
-end
-
--- Função para mover o jogador diretamente até o item
-local function moveToItem(item)
+-- Função para verificar a existência de "GunDrop" e teleportar
+local function checkAndTeleport()
+    local player = game.Players.LocalPlayer
     local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        -- Armazena a posição original do jogador
-        local originalPosition = character.HumanoidRootPart.CFrame
+    if not character then return end
 
-        -- Teleporta o jogador diretamente para o item
-        character.HumanoidRootPart.CFrame = item.CFrame
+    -- Armazena a posição original do jogador
+    local originalPosition = character.HumanoidRootPart.CFrame
 
-        -- Aguarda 1 segundo antes de voltar para a posição original
-        wait(1)
-        character.HumanoidRootPart.CFrame = originalPosition
-    end
-end
-
--- Função para detectar o item e mover automaticamente
-local function detectItem()
+    -- Loop para verificar constantemente se o "GunDrop" existe
     while true do
-        if autoGrabEnabled then
-            local item = game.Workspace:FindFirstChild(itemName)
-            if item then
-                print("Item detectado: " .. itemName)
-                moveToItem(item)
-            end
+        -- Tenta encontrar o "GunDrop"
+        local gunDrop = game.Workspace:FindFirstChild("GunDrop")
+        
+        if gunDrop then
+            -- Teleporta para o "GunDrop"
+            print("GunDrop encontrado! Teleportando...")
+            character.HumanoidRootPart.CFrame = gunDrop.CFrame
+
+            -- Espera 1 segundo
+            wait(1)
+
+            -- Retorna à posição original
+            print("Retornando à posição original...")
+            character.HumanoidRootPart.CFrame = originalPosition
         end
-        wait(checkInterval) -- Verifica a cada 1 segundo
+
+        -- Aguarda um tempo curto antes de verificar novamente (0.1s)
+        wait(0.1)
     end
 end
 
--- GUI para alternar o estado do grab automático
-local button = createGUI()
-button.MouseButton1Click:Connect(function()
-    autoGrabEnabled = not autoGrabEnabled
-    if autoGrabEnabled then
-        button.Text = "Grab GunDrop: ON"
-        button.BackgroundColor3 = Color3.fromRGB(65, 105, 225) -- Azul mais escuro
-    else
-        button.Text = "Grab GunDrop: OFF"
-        button.BackgroundColor3 = Color3.fromRGB(100, 149, 237) -- Azul claro original
-    end
-end)
-
--- Inicia a detecção do item
-spawn(detectItem)
+-- Inicia o script de verificação e teleporte
+checkAndTeleport()
