@@ -1,3 +1,5 @@
+-- LocalScript
+
 -- Função para criar uma GUI que persiste após a morte e é movível
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
