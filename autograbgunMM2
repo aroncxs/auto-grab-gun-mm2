@@ -1,83 +1,42 @@
--- LocalScript
+-- Tempo de espera antes de checar novamente
+local checkInterval = 0.1
 
--- Função para criar uma GUI que persiste após a morte e é movível
-local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+-- Nome do item a ser detectado
+local itemName = "GunDrop"
 
--- Criação da ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoGrabGunGUI"
-screenGui.ResetOnSpawn = false -- Mantém a GUI após a morte
-screenGui.Parent = playerGui
+-- Função para teleportar o jogador para a posição do item
+local function teleportToItem(item)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    
+    -- Armazena a posição atual do jogador
+    local originalPosition = character.HumanoidRootPart.CFrame
 
--- Criação do Frame (fundo da GUI)
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 100) -- Dimensões da GUI
-frame.Position = UDim2.new(0.5, -100, 0.5, -50) -- Posição inicial (centralizada)
-frame.BackgroundColor3 = Color3.fromRGB(0, 50, 100) -- Cor azul escura
-frame.Active = true
-frame.Draggable = true -- Permite que a GUI seja movida
-frame.Parent = screenGui
+    -- Teleporta o jogador para o item
+    character.HumanoidRootPart.CFrame = item.CFrame
 
--- Criação do botão de ativar/desativar
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 180, 0, 50)
-button.Position = UDim2.new(0.5, -90, 0.5, -25) -- Centralizado no frame
-button.BackgroundColor3 = Color3.fromRGB(0, 100, 200) -- Cor do botão
-button.Text = "Ativar AutoGrab" -- Texto inicial
-button.TextScaled = true
-button.Parent = frame
+    -- Espera 1 segundo
+    wait(1)
 
--- Variável de controle do AutoGrab
-local autoGrabEnabled = false
-
--- Função para ativar/desativar o AutoGrab
-local function toggleAutoGrab()
-    autoGrabEnabled = not autoGrabEnabled
-    if autoGrabEnabled then
-        button.Text = "Desativar AutoGrab"
-        print("AutoGrab Ativado")
-        -- Inicia o autograb
-        startAutoGrab()
-    else
-        button.Text = "Ativar AutoGrab"
-        print("AutoGrab Desativado")
-        -- Para o autograb
-        stopAutoGrab()
-    end
+    -- Volta para a posição original
+    character.HumanoidRootPart.CFrame = originalPosition
 end
 
--- Conecta o botão à função de alternância
-button.MouseButton1Click:Connect(toggleAutoGrab)
-
--- Funções de controle do autograb
-local grabbing = false
-local grabLoop
-
--- Função para iniciar o autograb
-function startAutoGrab()
-    grabbing = true
-    grabLoop = game:GetService("RunService").RenderStepped:Connect(function()
-        if grabbing then
-            local gunDrop = game.Workspace:FindFirstChild("GunDrop")
-            local character = player.Character
-            if gunDrop and character then
-                -- Armazena a posição original
-                local originalPosition = character.HumanoidRootPart.CFrame
-                -- Teleporta para o "GunDrop"
-                character.HumanoidRootPart.CFrame = gunDrop.CFrame
-                wait(1)
-                -- Retorna à posição original
-                character.HumanoidRootPart.CFrame = originalPosition
-            end
+-- Função para detectar o item
+local function detectItem()
+    while true do
+        -- Procura o item no mapa
+        local item = game.Workspace:FindFirstChild(itemName)
+        
+        if item then
+            print("Item detectado: " .. itemName)
+            teleportToItem(item)
         end
-    end)
-end
 
--- Função para parar o autograb
-function stopAutoGrab()
-    grabbing = false
-    if grabLoop then
-        grabLoop:Disconnect()
+        -- Espera um tempo antes de checar novamente
+        wait(checkInterval)
     end
 end
+
+-- Executa a detecção do item em paralelo
+spawn(detectItem)
